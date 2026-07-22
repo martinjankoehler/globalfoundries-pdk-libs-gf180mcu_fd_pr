@@ -102,3 +102,16 @@ def patch_legacy_classes():
         return original_method(self, name, *args, allow_duplicate=allow_duplicate)
 
     kfactory.layout.KCLayout.create_cell = __kfactory__layout__KCLayout_create_cell
+
+    #
+    # gdsfactory >= 9.29 no longer auto-activates the generic PDK (the CONF.pdk
+    # default changed from "generic" to None). The drawing code relies on an active
+    # PDK for layer-tuple resolution in gf.Component.add_polygon(), so activate the
+    # generic PDK if none is active. On gdsfactory <= 9.28 get_active_pdk()
+    # auto-activates the generic PDK, making this a no-op there. A PDK activated by
+    # the user beforehand is never overridden.
+    #
+    try:
+        gf.get_active_pdk()
+    except ValueError:
+        gf.gpdk.PDK.activate()
